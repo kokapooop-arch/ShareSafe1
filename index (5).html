@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ShareSafe – Is this photo okay to share?</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#4f46e5;
+--g:#16a34a;--gbg:#dcfce7;--a:#d97706;--abg:#fef3c7;--r:#dc2626;--rbg:#fee2e2;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--card:#151b2e;--text:#e8ecf7;--muted:#94a3b8;--line:#263052;--accent:#818cf8;
+--g:#4ade80;--gbg:#0f2a1c;--a:#fbbf24;--abg:#2d2208;--r:#f87171;--rbg:#321214;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b1020;--card:#151b2e;--text:#e8ecf7;--muted:#94a3b8;--line:#263052;--accent:#818cf8;--g:#4ade80;--gbg:#0f2a1c;--a:#fbbf24;--abg:#2d2208;--r:#f87171;--rbg:#321214;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.wrap{max-width:920px;margin:0 auto;padding:20px 16px 60px}
+header{text-align:center;padding:28px 0 8px}
+.logo{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;letter-spacing:-.01em}
+.logo i{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#4f46e5 60%,#ef4444);display:grid;place-items:center;color:#fff;font-style:normal}
+h1{font-size:clamp(1.9rem,6vw,3rem);line-height:1.1;margin:14px 0 10px;letter-spacing:-.03em}
+.sub{color:var(--muted);max-width:560px;margin:0 auto}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
+.lg{border-radius:14px;padding:12px 14px;font-size:.85rem;border:1px solid transparent}
+.lg b{display:block;font-size:.95rem}
+.lg.g{background:var(--gbg);color:var(--g)}.lg.a{background:var(--abg);color:var(--a)}.lg.r{background:var(--rbg);color:var(--r)}
+.lg span{color:var(--text);opacity:.75}
+.drop{background:var(--card);border:2px dashed var(--line);border-radius:22px;padding:34px 18px;text-align:center;transition:.2s}
+.drop.over{border-color:var(--accent);transform:scale(1.01)}
+.drop h2{margin:0 0 6px;font-size:1.25rem}.drop p{margin:0 0 18px;color:var(--muted)}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:12px;padding:13px 20px;cursor:pointer;background:var(--accent);color:#fff;display:inline-flex;align-items:center;gap:8px}
+button.alt{background:transparent;color:var(--text);border:1px solid var(--line)}
+button:active{transform:scale(.97)}
+.stats{display:flex;gap:10px;margin:22px 0 6px;flex-wrap:wrap}
+.pill{flex:1;min-width:90px;border-radius:14px;padding:10px 14px;text-align:center;font-weight:700}
+.pill small{display:block;font-weight:500;opacity:.8}
+.pill.g{background:var(--gbg);color:var(--g)}.pill.a{background:var(--abg);color:var(--a)}.pill.r{background:var(--rbg);color:var(--r)}
+#results{display:grid;gap:14px;margin-top:14px}
+.res{display:grid;grid-template-columns:130px 1fr;gap:16px;background:var(--card);border-radius:18px;border:2px solid var(--line);padding:12px;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.res img{width:130px;height:130px;object-fit:cover;border-radius:12px;background:var(--line)}
+.res.g{border-color:var(--g);background:linear-gradient(var(--gbg),var(--card) 90px)}
+.res.a{border-color:var(--a);background:linear-gradient(var(--abg),var(--card) 90px)}
+.res.r{border-color:var(--r);background:linear-gradient(var(--rbg),var(--card) 90px)}
+.badge{display:inline-block;font-weight:800;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:99px;color:#fff}
+.g .badge{background:var(--g);color:#052e16}.a .badge{background:var(--a);color:#2d1a00}.r .badge{background:var(--r);color:#2a0507}
+.res h3{margin:8px 0 4px;font-size:1.05rem}
+.res ul{margin:6px 0;padding-left:18px;color:var(--muted);font-size:.9rem}
+.bar{height:6px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:currentColor}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.res .t{color:var(--text)}
+.spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes s{to{transform:rotate(360deg)}}
+.err{color:var(--r)}
+.share{margin-top:40px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+#qr{background:#fff;padding:10px;border-radius:14px;width:164px;height:164px}
+.share h2{margin:0 0 6px}.share p{margin:0 0 12px;color:var(--muted)}
+.link{display:flex;gap:8px;flex-wrap:wrap}
+.link input{flex:1;min-width:180px;font:inherit;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+.note{text-align:center;color:var(--muted);font-size:.8rem;margin-top:26px}
+@media(max-width:640px){.legend{grid-template-columns:1fr}.res{grid-template-columns:96px 1fr}.res img{width:96px;height:96px}.share{grid-template-columns:1fr;justify-items:center;text-align:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo"><i>✓</i> ShareSafe</div>
+  <h1>Is this photo okay to share?</h1>
+  <p class="sub">Snap or upload any picture. A checker on your device looks at it and tells you in seconds who it’s safe to share with.</p>
+</header>
+
+<div class="legend">
+  <div class="lg g"><b>● Safe</b><span>Fine to post anywhere</span></div>
+  <div class="lg a"><b>● Family &amp; friends</b><span>Fine for close people, not public</span></div>
+  <div class="lg r"><b>● Unsafe</b><span>Don’t share it</span></div>
+</div>
+
+<div class="drop" id="drop">
+  <h2>Add your photos</h2>
+  <p>Drag &amp; drop, paste, or pick from your device. On a phone, use the camera button.</p>
+  <div class="btns">
+    <button id="camBtn">📷 Take a photo</button>
+    <button id="fileBtn" class="alt">🖼️ Choose pictures</button>
+  </div>
+  <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+  <input type="file" id="files" accept="image/*" multiple hidden>
+</div>
+
+<p class="note" id="status" style="margin:14px 0 0">⏳ Loading the checker… (first time only, this can take a little while)</p>
+
+<div class="stats" id="stats" hidden>
+  <div class="pill g"><span id="cg">0</span><small>Safe</small></div>
+  <div class="pill a"><span id="ca">0</span><small>Family &amp; friends</small></div>
+  <div class="pill r"><span id="cr">0</span><small>Unsafe</small></div>
+  <button id="clear" class="alt" style="align-self:stretch">🗑️ Clear photos</button>
+</div>
+<div id="results"></div>
+
+<p class="note">🔒 Your photos stay on your own device. They are never saved on this website and nobody else can see them. The check runs inside your browser, so photos are never uploaded anywhere, and closing or refreshing this page erases everything. This is a basic check for explicit content only; it can’t spot addresses, ID cards or identifiable children. Results are a helpful guide, not a guarantee, so always use your own judgment.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.6.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const counts={g:0,a:0,r:0};
+let queue=Promise.resolve();
+let modelP=null;
+function getModel(){
+  if(!modelP){
+    if(typeof nsfwjs==="undefined")return Promise.reject(new Error("lib"));
+    modelP=nsfwjs.load();
+  }
+  return modelP;
+}
+getModel().then(()=>{$("status").textContent="✅ Checker ready. Everything runs on your device."})
+  .catch(()=>{modelP=null;$("status").innerHTML='<span class="err">⚠️ The checker could not load. Check your internet connection and refresh the page.</span>'});
+
+let custom=null;
+(async()=>{try{
+  const r=await fetch("model/metadata.json");if(!r.ok)return;
+  const meta=await r.json();
+  custom={m:await tf.loadLayersModel("model/model.json"),labels:meta.labels};
+}catch(e){}})();
+async function customJudge(im){
+  if(!custom)return null;
+  try{
+    const probs=tf.tidy(()=>custom.m.predict(tf.browser.fromPixels(im).resizeBilinear([224,224]).toFloat().div(127).sub(1).expandDims(0)).dataSync());
+    let i=0;probs.forEach((v,k)=>{if(v>probs[i])i=k});
+    const name=String(custom.labels[i]).toLowerCase().replace(/[^a-z]/g,""),p=probs[i];
+    if(p<0.7)return null;
+    const c=Math.round(p*100);
+    if(name==="red")return{category:"unsafe",confidence:c,title:"Looks unsafe to share",reasons:["This matches photos you marked as red"],tip:"Don’t share it."};
+    if(name==="yellow")return{category:"family",confidence:c,title:"Better for family & friends",reasons:["This matches photos you marked as yellow"],tip:"Keep it to close people, not public."};
+    if(name==="green")return null;
+    if(name.includes("card")||name==="id")return{category:"unsafe",confidence:c,title:"ID or bank card",reasons:["This looks like an ID or bank card"],tip:"Don’t share it. It shows private details."};
+    if(name.includes("plate"))return{category:"family",confidence:c,title:"Car license plate",reasons:["A license plate seems to be visible"],tip:"Hide or blur the plate before sharing publicly."};
+    return null;
+  }catch(e){return null}
+}
+const rank={safe:0,family:1,unsafe:2};
+function judge(preds){
+  const p={};preds.forEach(x=>p[x.className]=x.probability);
+  const explicit=(p.Porn||0)+(p.Hentai||0),sexy=p.Sexy||0;
+  const pct=v=>Math.round(v*100);
+  if(explicit>=0.5)return{category:"unsafe",confidence:pct(explicit),title:"Explicit content detected",
+    reasons:["The checker is fairly sure this contains explicit content"],tip:"Don’t share this photo."};
+  if(explicit>=0.15||sexy>=0.4)return{category:"family",confidence:pct(Math.max(explicit,sexy)),title:"Possibly revealing photo",
+    reasons:["The checker found content that may be too revealing for the public"],tip:"Keep it to close family and friends."};
+  return{category:"safe",confidence:pct(1-Math.max(explicit,sexy)),title:"No explicit content found",
+    reasons:["No explicit or revealing content detected"],
+    tip:"This check can’t see private details like addresses, ID cards or children’s faces. Look the photo over yourself too."};
+}
+
+
+
+function shrink(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),im=new Image();
+    im.onload=()=>{
+      const m=1024,s=Math.min(1,m/Math.max(im.width,im.height));
+      const c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+      c.toBlob(b=>b?res({blob:b,url}):rej(new Error("Could not read image")),"image/jpeg",.85);
+    };
+    im.onerror=()=>rej(new Error("This image format isn’t supported by your browser. Try a JPG or PNG (iPhone: Settings > Camera > Formats > Most Compatible)."));
+    im.src=url;
+  });
+}
+
+const L={safe:["g","Safe to share","✅"],family:["a","Family & friends only","👨‍👩‍👧"],unsafe:["r","Unsafe – don’t share","⛔"]};
+
+function esc(s){const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML}
+
+async function analyze(file){
+  const card=document.createElement("div");card.className="res";
+  card.innerHTML='<img alt=""><div><span class="spin"></span> Analyzing…</div>';
+  $("results").prepend(card);
+  try{
+    const {blob,url}=await shrink(file);
+    card.querySelector("img").src=url;
+    let preds;
+    try{
+      const model=await getModel();
+      const im=new Image();im.src=url;await im.decode();
+      preds=await model.classify(im);
+    }catch(e){throw new Error("The checker isn’t ready. Wait a moment and try again, or refresh the page.")}
+    let out=judge(preds);
+    const cj=await customJudge(im);
+    if(cj&&rank[cj.category]>=rank[out.category])out=cj;
+    const cat=L[String(out.category||"").toLowerCase().trim()]?String(out.category).toLowerCase().trim():"family";
+    const [k,label,ico]=L[cat];
+    const conf=Math.max(0,Math.min(100,+out.confidence||0));
+    counts[k]++;$("c"+k).textContent=counts[k];$("stats").hidden=false;
+    card.className="res "+k;
+    card.querySelector("div").innerHTML=
+      `<span class="badge">${ico} ${label}</span><h3 class="t">${esc(out.title||"Photo")}</h3>`+
+      `<ul>${(out.reasons||[]).map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`+
+      (out.tip?`<div class="t" style="font-size:.88rem">💡 ${esc(out.tip)}</div>`:"")+
+      `<div class="bar"><i style="width:${conf}%"></i></div><small class="t" style="opacity:.7">${conf}% confident</small>`;
+  }catch(e){
+    card.querySelector("div").innerHTML='<span class="err">⚠️ '+esc(e.message||"Something went wrong. Please try again.")+'</span>';
+  }
+}
+
+function add(list){
+  [...list].filter(f=>f.type.startsWith("image/")||/\.(heic|heif)$/i.test(f.name)).forEach(f=>{queue=queue.then(()=>analyze(f))});
+}
+$("camBtn").onclick=()=>$("cam").click();
+$("fileBtn").onclick=()=>$("files").click();
+$("cam").onchange=e=>{add(e.target.files);e.target.value=""};
+$("files").onchange=e=>{add(e.target.files);e.target.value=""};
+const d=$("drop");
+["dragenter","dragover"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.add("over")}));
+["dragleave","drop"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.remove("over")}));
+d.addEventListener("drop",e=>add(e.dataTransfer.files));
+document.addEventListener("paste",e=>add([...(e.clipboardData?.files||[])]));
+
+$("clear").onclick=()=>{
+  document.querySelectorAll("#results img").forEach(i=>{try{URL.revokeObjectURL(i.src)}catch(e){}});
+  $("results").innerHTML="";counts.g=counts.a=counts.r=0;
+  ["cg","ca","cr"].forEach(id=>$(id).textContent="0");$("stats").hidden=true;
+};
+</script>
+</body>
+</html>
