@@ -58,6 +58,9 @@ button:active{transform:scale(.97)}
 .link input{flex:1;min-width:180px;font:inherit;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
 .note{text-align:center;color:var(--muted);font-size:.8rem;margin-top:26px}
 @media(max-width:640px){.legend{grid-template-columns:1fr}.res{grid-template-columns:96px 1fr}.res img{width:96px;height:96px}.share{grid-template-columns:1fr;justify-items:center;text-align:center}}
+#camBox{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
+#camBox.on{display:flex}#camBox button.alt{color:#fff;border-color:rgba(255,255,255,.4)}
+#camVid{max-width:100%;max-height:68vh;border-radius:16px;background:#000}
 </style>
 </head>
 <body>
@@ -85,6 +88,7 @@ button:active{transform:scale(.97)}
   <input type="file" id="files" accept="image/*" multiple hidden>
 </div>
 
+<p class="note err" id="camErr" hidden></p>
 <p class="note" id="status" style="margin:14px 0 0">⏳ Loading the checker… (first time only, this can take a little while)</p>
 
 <div class="stats" id="stats" hidden>
@@ -98,6 +102,14 @@ button:active{transform:scale(.97)}
 <p class="note">🔒 Your photos stay on your own device. They are never saved on this website and nobody else can see them. The check runs inside your browser, so photos are never uploaded anywhere, and closing or refreshing this page erases everything. This is a basic check for explicit content only; it can’t spot addresses, ID cards or identifiable children. Results are a helpful guide, not a guarantee, so always use your own judgment.</p>
 </div>
 
+<div id="camBox">
+  <video id="camVid" autoplay playsinline muted></video>
+  <div class="btns">
+    <button id="snap">📸 Take picture</button>
+    <button id="flip" class="alt">🔄 Switch camera</button>
+    <button id="camClose" class="alt">✖ Close</button>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.6.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
 <script>
@@ -212,7 +224,35 @@ async function analyze(file){
 function add(list){
   [...list].filter(f=>f.type.startsWith("image/")||/\.(heic|heif)$/i.test(f.name)).forEach(f=>{queue=queue.then(()=>analyze(f))});
 }
-$("camBtn").onclick=()=>$("cam").click();
+let camStream=null,facing="environment";
+function stopCam(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+  $("camVid").srcObject=null;$("camBox").classList.remove("on");
+}
+async function openCam(){
+  $("camErr").hidden=true;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$("cam").click();return}
+  try{
+    if(camStream){camStream.getTracks().forEach(t=>t.stop())}
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false});
+    $("camVid").srcObject=camStream;
+    $("camBox").classList.add("on");
+  }catch(e){
+    stopCam();
+    $("camErr").textContent="⚠️ Camera access was blocked or no camera was found. Click the lock icon next to the web address, allow Camera, then try again. You can also use Choose pictures.";
+    $("camErr").hidden=false;
+  }
+}
+$("snap").onclick=()=>{
+  const v=$("camVid");if(!v.videoWidth)return;
+  const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;
+  c.getContext("2d").drawImage(v,0,0);
+  c.toBlob(b=>{if(!b)return;stopCam();add([new File([b],"camera.jpg",{type:"image/jpeg"})])},"image/jpeg",.92);
+};
+$("flip").onclick=()=>{facing=facing==="environment"?"user":"environment";openCam()};
+$("camClose").onclick=stopCam;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")stopCam()});
+$("camBtn").onclick=openCam;
 $("fileBtn").onclick=()=>$("files").click();
 $("cam").onchange=e=>{add(e.target.files);e.target.value=""};
 $("files").onchange=e=>{add(e.target.files);e.target.value=""};
