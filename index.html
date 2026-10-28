@@ -105,6 +105,7 @@ const $=id=>document.getElementById(id);
 const counts={g:0,a:0,r:0};
 let queue=Promise.resolve();
 let modelP=null;
+let nsfwDead=false;
 function getModel(){
   if(!modelP){
     if(typeof nsfwjs==="undefined")return Promise.reject(new Error("lib"));
@@ -113,15 +114,22 @@ function getModel(){
   return modelP;
 }
 getModel().then(()=>{$("status").textContent="✅ Checker ready. Everything runs on your device."})
-  .catch(()=>{modelP=null;$("status").innerHTML='<span class="err">⚠️ The checker could not load. Check your internet connection and refresh the page.</span>'});
+  .catch(()=>{nsfwDead=true;customP.then(c=>{$("status").innerHTML=c?"✅ Your trained checker is ready. Everything runs on your device.":'<span class="err">⚠️ The checker could not load. Check your internet connection and refresh the page.</span>'})});
 
 let custom=null;
-(async()=>{try{
-  const r=await fetch("model/metadata.json");if(!r.ok)return;
-  const meta=await r.json();
-  custom={m:await tf.loadLayersModel("model/model.json"),labels:meta.labels};
-}catch(e){}})();
+const customP=(async()=>{
+  for(const f of ["model","tm-my-image-model"]){
+    try{
+      const r=await fetch(f+"/metadata.json");if(!r.ok)continue;
+      const meta=await r.json();
+      custom={m:await tf.loadLayersModel(f+"/model.json"),labels:meta.labels};
+      return custom;
+    }catch(e){}
+  }
+  return null;
+})();
 async function customJudge(im){
+  await customP;
   if(!custom)return null;
   try{
     const probs=tf.tidy(()=>custom.m.predict(tf.browser.fromPixels(im).resizeBilinear([224,224]).toFloat().div(127).sub(1).expandDims(0)).dataSync());
@@ -131,7 +139,7 @@ async function customJudge(im){
     const c=Math.round(p*100);
     if(name==="red")return{category:"unsafe",confidence:c,title:"Looks unsafe to share",reasons:["This matches photos you marked as red"],tip:"Don’t share it."};
     if(name==="yellow")return{category:"family",confidence:c,title:"Better for family & friends",reasons:["This matches photos you marked as yellow"],tip:"Keep it to close people, not public."};
-    if(name==="green")return null;
+    if(name==="green")return{category:"safe",confidence:c,title:"Looks fine to share",reasons:["This matches photos you marked as green"],tip:""};
     if(name.includes("card")||name==="id")return{category:"unsafe",confidence:c,title:"ID or bank card",reasons:["This looks like an ID or bank card"],tip:"Don’t share it. It shows private details."};
     if(name.includes("plate"))return{category:"family",confidence:c,title:"Car license plate",reasons:["A license plate seems to be visible"],tip:"Hide or blur the plate before sharing publicly."};
     return null;
@@ -178,15 +186,13 @@ async function analyze(file){
   try{
     const {blob,url}=await shrink(file);
     card.querySelector("img").src=url;
-    let preds;
-    try{
-      const model=await getModel();
-      const im=new Image();im.src=url;await im.decode();
-      preds=await model.classify(im);
-    }catch(e){throw new Error("The checker isn’t ready. Wait a moment and try again, or refresh the page.")}
-    let out=judge(preds);
+    const im=new Image();im.src=url;await im.decode();
+    let preds=null;
+    if(!nsfwDead){try{const model=await getModel();preds=await model.classify(im)}catch(e){}}
+    const nj=preds?judge(preds):null;
     const cj=await customJudge(im);
-    if(cj&&rank[cj.category]>=rank[out.category])out=cj;
+    const out=(nj&&cj)?(rank[cj.category]>=rank[nj.category]?cj:nj):(nj||cj);
+    if(!out)throw new Error("The checker isn’t ready. Wait a moment and try again, or refresh the page.");
     const cat=L[String(out.category||"").toLowerCase().trim()]?String(out.category).toLowerCase().trim():"family";
     const [k,label,ico]=L[cat];
     const conf=Math.max(0,Math.min(100,+out.confidence||0));
