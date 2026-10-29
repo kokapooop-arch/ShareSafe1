@@ -61,28 +61,32 @@ button:active{transform:scale(.97)}
 #camBox{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
 #camBox.on{display:flex}#camBox button.alt{color:#fff;border-color:rgba(255,255,255,.4)}
 #camVid{max-width:100%;max-height:68vh;border-radius:16px;background:#000}
+.lang{display:flex;gap:6px;justify-content:center;padding-top:6px}
+.lang button{padding:6px 14px;font-size:.85rem}
+.lang button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
+  <div class="lang"><button id="lEn" class="alt">English</button><button id="lAr" class="alt">العربية</button></div>
   <div class="logo"><i>✓</i> ShareSafe</div>
-  <h1>Is this photo okay to share?</h1>
-  <p class="sub">Snap or upload any picture. A checker on your device looks at it and tells you in seconds who it’s safe to share with.</p>
+  <h1 data-i="h1">Is this photo okay to share?</h1>
+  <p class="sub" data-i="sub">Snap or upload any picture. A checker on your device looks at it and tells you in seconds who it’s safe to share with.</p>
 </header>
 
 <div class="legend">
-  <div class="lg g"><b>● Safe</b><span>Fine to post anywhere</span></div>
-  <div class="lg a"><b>● Family &amp; friends</b><span>Fine for close people, not public</span></div>
-  <div class="lg r"><b>● Unsafe</b><span>Don’t share it</span></div>
+  <div class="lg g"><b data-i="lgSafe">● Safe</b><span data-i="lgSafeD">Fine to post anywhere</span></div>
+  <div class="lg a"><b data-i="lgFam">● Family &amp; friends</b><span data-i="lgFamD">Fine for close people, not public</span></div>
+  <div class="lg r"><b data-i="lgUns">● Unsafe</b><span data-i="lgUnsD">Don’t share it</span></div>
 </div>
 
 <div class="drop" id="drop">
-  <h2>Add your photos</h2>
-  <p>Drag &amp; drop, paste, or pick from your device. On a phone, use the camera button.</p>
+  <h2 data-i="dropH">Add your photos</h2>
+  <p data-i="dropP">Drag &amp; drop, paste, or pick from your device. On a phone, use the camera button.</p>
   <div class="btns">
-    <button id="camBtn">📷 Take a photo</button>
-    <button id="fileBtn" class="alt">🖼️ Choose pictures</button>
+    <button id="camBtn" data-i="camBtn">📷 Take a photo</button>
+    <button id="fileBtn" class="alt" data-i="fileBtn">🖼️ Choose pictures</button>
   </div>
   <input type="file" id="cam" accept="image/*" capture="environment" hidden>
   <input type="file" id="files" accept="image/*" multiple hidden>
@@ -92,28 +96,78 @@ button:active{transform:scale(.97)}
 <p class="note" id="status" style="margin:14px 0 0">⏳ Loading the checker… (first time only, this can take a little while)</p>
 
 <div class="stats" id="stats" hidden>
-  <div class="pill g"><span id="cg">0</span><small>Safe</small></div>
-  <div class="pill a"><span id="ca">0</span><small>Family &amp; friends</small></div>
-  <div class="pill r"><span id="cr">0</span><small>Unsafe</small></div>
-  <button id="clear" class="alt" style="align-self:stretch">🗑️ Clear photos</button>
+  <div class="pill g"><span id="cg">0</span><small data-i="pSafe">Safe</small></div>
+  <div class="pill a"><span id="ca">0</span><small data-i="pFam">Family &amp; friends</small></div>
+  <div class="pill r"><span id="cr">0</span><small data-i="pUns">Unsafe</small></div>
+  <button id="clear" class="alt" data-i="clear" style="align-self:stretch">🗑️ Clear photos</button>
 </div>
 <div id="results"></div>
 
-<p class="note">🔒 Your photos stay on your own device. They are never saved on this website and nobody else can see them. The check runs inside your browser, so photos are never uploaded anywhere, and closing or refreshing this page erases everything. This is a basic check for explicit content only; it can’t spot addresses, ID cards or identifiable children. Results are a helpful guide, not a guarantee, so always use your own judgment.</p>
+<p class="note" data-i="privacy"></p>
 </div>
 
 <div id="camBox">
   <video id="camVid" autoplay playsinline muted></video>
   <div class="btns">
-    <button id="snap">📸 Take picture</button>
-    <button id="flip" class="alt">🔄 Switch camera</button>
-    <button id="camClose" class="alt">✖ Close</button>
+    <button id="snap" data-i="snap">📸 Take picture</button>
+    <button id="flip" class="alt" data-i="flip">🔄 Switch camera</button>
+    <button id="camClose" class="alt" data-i="camClose">✖ Close</button>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.6.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+const T={
+en:{title:"ShareSafe – Is this photo okay to share?",h1:"Is this photo okay to share?",
+sub:"Snap or upload any picture. A checker on your device looks at it and tells you in seconds who it’s safe to share with.",
+lgSafe:"● Safe",lgSafeD:"Fine to post anywhere",lgFam:"● Family & friends",lgFamD:"Fine for close people, not public",lgUns:"● Unsafe",lgUnsD:"Don’t share it",
+dropH:"Add your photos",dropP:"Drag & drop, paste, or pick from your device. On a phone, use the camera button.",
+camBtn:"📷 Take a photo",fileBtn:"🖼️ Choose pictures",pSafe:"Safe",pFam:"Family & friends",pUns:"Unsafe",clear:"🗑️ Clear photos",
+snap:"📸 Take picture",flip:"🔄 Switch camera",camClose:"✖ Close",
+privacy:"🔒 Your photos stay on your own device. They are never saved on this website and nobody else can see them. The check runs inside your browser, so photos are never uploaded anywhere, and closing or refreshing this page erases everything. Results are a helpful guide, not a guarantee, and the checker only recognizes what it was trained on, so always use your own judgment.",
+loading:"⏳ Loading the checker… (first time only, this can take a little while)",ready:"✅ Checker ready. Everything runs on your device.",fail:"⚠️ The checker could not load.",
+camErr:"Camera access was blocked or no camera was found. Click the lock icon next to the web address, allow Camera, then try again. You can also use Choose pictures.",
+analyzing:"Analyzing…",confTxt:n=>n+"% confident",
+errReady:"The checker isn’t ready. Wait a moment and try again, or refresh the page.",
+errFmt:"This image format isn’t supported by your browser. Try a JPG or PNG.",errGen:"Something went wrong. Please try again.",
+cat:{safe:["Safe to share","✅"],family:["Family & friends only","👨‍👩‍👧"],unsafe:["Unsafe – don’t share","⛔"]},
+res:{red:["Looks unsafe to share","Don’t share it."],yellow:["Better for family & friends","Keep it to close people, not public."],green:["Looks fine to share",""],
+card:["ID or bank card","Don’t share it. It shows private details."],plate:["Car license plate","Hide or blur the plate before sharing publicly."],
+exp:["Explicit content detected","Don’t share this photo."],sexy:["Possibly revealing photo","Keep it to close family and friends."],
+clean:["No explicit content found","This check can’t see private details like addresses, ID cards or children’s faces. Look the photo over yourself too."]}},
+ar:{title:"ShareSafe – هل يمكن مشاركة هذه الصورة؟",h1:"هل يمكن مشاركة هذه الصورة؟",
+sub:"التقط صورة أو ارفعها، وسيخبرك فاحص على جهازك خلال ثوانٍ لمن يمكنك مشاركتها بأمان.",
+lgSafe:"● آمنة",lgSafeD:"مناسبة للنشر في أي مكان",lgFam:"● العائلة والأصدقاء",lgFamD:"مناسبة للمقربين وليس للعموم",lgUns:"● غير آمنة",lgUnsD:"لا تشاركها",
+dropH:"أضف صورك",dropP:"اسحب الصور وأفلتها هنا، أو الصقها، أو اخترها من جهازك. على الهاتف استخدم زر الكاميرا.",
+camBtn:"📷 التقاط صورة",fileBtn:"🖼️ اختيار صور",pSafe:"آمنة",pFam:"العائلة والأصدقاء",pUns:"غير آمنة",clear:"🗑️ مسح الصور",
+snap:"📸 التقاط",flip:"🔄 تبديل الكاميرا",camClose:"✖ إغلاق",
+privacy:"🔒 تبقى صورك على جهازك. لا يتم حفظها في هذا الموقع ولا يستطيع أحد غيرك رؤيتها. يتم الفحص داخل متصفحك، لذلك لا يتم رفع الصور إلى أي مكان، ويؤدي إغلاق الصفحة أو تحديثها إلى مسح كل شيء. النتائج مجرد إرشاد وليست مضمونة، والفاحص يتعرف فقط على ما تدرّب عليه، فاستخدم حكمك الشخصي دائمًا.",
+loading:"⏳ جارٍ تحميل الفاحص… (في المرة الأولى فقط، وقد يستغرق قليلًا)",ready:"✅ الفاحص جاهز. كل شيء يعمل على جهازك.",fail:"⚠️ تعذّر تحميل الفاحص.",
+camErr:"تم رفض الوصول إلى الكاميرا أو لم يتم العثور على كاميرا. اضغط على أيقونة القفل بجانب عنوان الموقع، واسمح باستخدام الكاميرا ثم حاول مجددًا. يمكنك أيضًا استخدام زر اختيار صور.",
+analyzing:"جارٍ التحليل…",confTxt:n=>"نسبة الثقة: "+n+"%",
+errReady:"الفاحص غير جاهز. انتظر قليلًا ثم حاول مجددًا أو حدّث الصفحة.",
+errFmt:"صيغة هذه الصورة غير مدعومة في متصفحك. جرّب صورة JPG أو PNG.",errGen:"حدث خطأ ما. حاول مرة أخرى.",
+cat:{safe:["آمنة للمشاركة","✅"],family:["للعائلة والأصدقاء فقط","👨‍👩‍👧"],unsafe:["غير آمنة – لا تشاركها","⛔"]},
+res:{red:["تبدو غير آمنة للمشاركة","لا تشاركها."],yellow:["الأفضل مشاركتها مع العائلة والأصدقاء","اجعلها للمقربين فقط وليس للعموم."],green:["تبدو مناسبة للمشاركة",""],
+card:["بطاقة هوية أو بطاقة بنكية","لا تشاركها، فهي تعرض تفاصيل خاصة."],plate:["لوحة سيارة","أخفِ اللوحة أو غطّها قبل المشاركة العامة."],
+exp:["تم اكتشاف محتوى صريح","لا تشارك هذه الصورة."],sexy:["قد تكون الصورة غير محتشمة","اجعلها للعائلة والأصدقاء المقربين فقط."],
+clean:["لم يتم العثور على محتوى صريح","لا يستطيع هذا الفحص رؤية التفاصيل الخاصة مثل العناوين وبطاقات الهوية ووجوه الأطفال. راجع الصورة بنفسك أيضًا."]}}
+};
+let lang="en";
+try{lang=localStorage.getItem("lang")||((navigator.language||"").toLowerCase().startsWith("ar")?"ar":"en")}catch(e){}
+let stat="loading",camBad=false;
+function setStat(){const t=T[lang],el=$("status");el.innerHTML=stat==="ready"?esc(t.ready):stat==="fail"?'<span class="err">'+esc(t.fail)+" "+esc(customErr)+"</span>":esc(t.loading)}
+function setCamErr(){const el=$("camErr");el.hidden=!camBad;el.textContent="⚠️ "+T[lang].camErr}
+function applyLang(l){
+  lang=l;try{localStorage.setItem("lang",l)}catch(e){}
+  document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";
+  document.title=T[l].title;
+  document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=T[l][el.dataset.i]});
+  $("lEn").classList.toggle("on",l==="en");$("lAr").classList.toggle("on",l==="ar");
+  setStat();setCamErr();
+  document.querySelectorAll("#results .res").forEach(render);
+}
 const counts={g:0,a:0,r:0};
 let queue=Promise.resolve();
 let modelP=null;
@@ -126,8 +180,7 @@ function getModel(){
   }
   return modelP;
 }
-getModel().then(()=>{$("status").textContent="✅ Checker ready. Everything runs on your device."})
-  .catch(()=>{nsfwDead=true;customP.then(c=>{$("status").innerHTML=c?"✅ Your trained checker is ready. Everything runs on your device.":'<span class="err">⚠️ Your trained model could not load. '+esc(customErr)+'</span>'})});
+getModel().then(()=>{stat="ready";setStat()}).catch(()=>{nsfwDead=true;customP.then(c=>{stat=c?"ready":"fail";setStat()})});
 
 let custom=null;
 const customP=(async()=>{
@@ -150,29 +203,23 @@ async function customJudge(im){
     const name=String(custom.labels[i]).toLowerCase().replace(/[^a-z]/g,""),p=probs[i];
     if(p<0.7)return null;
     const c=Math.round(p*100);
-    if(name==="red")return{category:"unsafe",confidence:c,title:"Looks unsafe to share",reasons:["This matches photos you marked as red"],tip:"Don’t share it."};
-    if(name==="yellow")return{category:"family",confidence:c,title:"Better for family & friends",reasons:["This matches photos you marked as yellow"],tip:"Keep it to close people, not public."};
-    if(name==="green")return{category:"safe",confidence:c,title:"Looks fine to share",reasons:["This matches photos you marked as green"],tip:""};
-    if(name.includes("card")||name==="id")return{category:"unsafe",confidence:c,title:"ID or bank card",reasons:["This looks like an ID or bank card"],tip:"Don’t share it. It shows private details."};
-    if(name.includes("plate"))return{category:"family",confidence:c,title:"Car license plate",reasons:["A license plate seems to be visible"],tip:"Hide or blur the plate before sharing publicly."};
+    if(name==="red")return R("unsafe",c,"red");
+    if(name==="yellow")return R("family",c,"yellow");
+    if(name==="green")return R("safe",c,"green");
+    if(name.includes("card")||name==="id")return R("unsafe",c,"card");
+    if(name.includes("plate"))return R("family",c,"plate");
     return null;
   }catch(e){return null}
 }
 const rank={safe:0,family:1,unsafe:2};
+const R=(category,confidence,key)=>({category,confidence,key});
 function judge(preds){
   const p={};preds.forEach(x=>p[x.className]=x.probability);
-  const explicit=(p.Porn||0)+(p.Hentai||0),sexy=p.Sexy||0;
-  const pct=v=>Math.round(v*100);
-  if(explicit>=0.5)return{category:"unsafe",confidence:pct(explicit),title:"Explicit content detected",
-    reasons:["The checker is fairly sure this contains explicit content"],tip:"Don’t share this photo."};
-  if(explicit>=0.15||sexy>=0.4)return{category:"family",confidence:pct(Math.max(explicit,sexy)),title:"Possibly revealing photo",
-    reasons:["The checker found content that may be too revealing for the public"],tip:"Keep it to close family and friends."};
-  return{category:"safe",confidence:pct(1-Math.max(explicit,sexy)),title:"No explicit content found",
-    reasons:["No explicit or revealing content detected"],
-    tip:"This check can’t see private details like addresses, ID cards or children’s faces. Look the photo over yourself too."};
+  const explicit=(p.Porn||0)+(p.Hentai||0),sexy=p.Sexy||0,pct=v=>Math.round(v*100);
+  if(explicit>=0.5)return R("unsafe",pct(explicit),"exp");
+  if(explicit>=0.15||sexy>=0.4)return R("family",pct(Math.max(explicit,sexy)),"sexy");
+  return R("safe",pct(1-Math.max(explicit,sexy)),"clean");
 }
-
-
 
 function shrink(file){
   return new Promise((res,rej)=>{
@@ -183,21 +230,21 @@ function shrink(file){
       c.getContext("2d").drawImage(im,0,0,c.width,c.height);
       c.toBlob(b=>b?res({blob:b,url}):rej(new Error("Could not read image")),"image/jpeg",.85);
     };
-    im.onerror=()=>rej(new Error("This image format isn’t supported by your browser. Try a JPG or PNG (iPhone: Settings > Camera > Formats > Most Compatible)."));
+    im.onerror=()=>rej(new Error("fmt"));
     im.src=url;
   });
 }
 
-const L={safe:["g","Safe to share","✅"],family:["a","Family & friends only","👨‍👩‍👧"],unsafe:["r","Unsafe – don’t share","⛔"]};
 
 function esc(s){const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML}
 
 async function analyze(file){
   const card=document.createElement("div");card.className="res";
-  card.innerHTML='<img alt=""><div><span class="spin"></span> Analyzing…</div>';
+  card.innerHTML='<img alt=""><div></div>';
+  card._s={t:"load"};render(card);
   $("results").prepend(card);
   try{
-    const {blob,url}=await shrink(file);
+    const {url}=await shrink(file);
     card.querySelector("img").src=url;
     const im=new Image();im.src=url;await im.decode();
     let preds=null;
@@ -205,20 +252,23 @@ async function analyze(file){
     const nj=preds?judge(preds):null;
     const cj=await customJudge(im);
     const out=(nj&&cj)?(rank[cj.category]>=rank[nj.category]?cj:nj):(nj||cj);
-    if(!out)throw new Error("The checker isn’t ready. "+(customErr||"Wait a moment and try again, or refresh the page."));
-    const cat=L[String(out.category||"").toLowerCase().trim()]?String(out.category).toLowerCase().trim():"family";
-    const [k,label,ico]=L[cat];
-    const conf=Math.max(0,Math.min(100,+out.confidence||0));
+    if(!out){card._s={t:"err",k:"errReady",x:customErr};render(card);return}
+    const k={safe:"g",family:"a",unsafe:"r"}[out.category];
     counts[k]++;$("c"+k).textContent=counts[k];$("stats").hidden=false;
-    card.className="res "+k;
-    card.querySelector("div").innerHTML=
-      `<span class="badge">${ico} ${label}</span><h3 class="t">${esc(out.title||"Photo")}</h3>`+
-      `<ul>${(out.reasons||[]).map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`+
-      (out.tip?`<div class="t" style="font-size:.88rem">💡 ${esc(out.tip)}</div>`:"")+
-      `<div class="bar"><i style="width:${conf}%"></i></div><small class="t" style="opacity:.7">${conf}% confident</small>`;
+    card._s={t:"res",out};render(card);
   }catch(e){
-    card.querySelector("div").innerHTML='<span class="err">⚠️ '+esc(e.message||"Something went wrong. Please try again.")+'</span>';
+    card._s={t:"err",k:e&&e.message==="fmt"?"errFmt":"errGen"};render(card);
   }
+}
+function render(card){
+  const s=card._s,t=T[lang],box=card.querySelector("div");
+  if(s.t==="load"){box.innerHTML='<span class="spin"></span> '+esc(t.analyzing);return}
+  if(s.t==="err"){card.className="res";box.innerHTML='<span class="err">⚠️ '+esc(t[s.k])+(s.x?" "+esc(s.x):"")+'</span>';return}
+  const o=s.out,k={safe:"g",family:"a",unsafe:"r"}[o.category],r=t.res[o.key],lab=t.cat[o.category];
+  card.className="res "+k;
+  box.innerHTML=`<span class="badge">${lab[1]} ${esc(lab[0])}</span><h3 class="t">${esc(r[0])}</h3>`+
+    (r[1]?`<div class="t" style="font-size:.88rem">💡 ${esc(r[1])}</div>`:"")+
+    `<div class="bar"><i style="width:${o.confidence}%"></i></div><small class="t" style="opacity:.7">${esc(t.confTxt(o.confidence))}</small>`;
 }
 
 function add(list){
@@ -230,7 +280,7 @@ function stopCam(){
   $("camVid").srcObject=null;$("camBox").classList.remove("on");
 }
 async function openCam(){
-  $("camErr").hidden=true;
+  camBad=false;setCamErr();
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$("cam").click();return}
   try{
     if(camStream){camStream.getTracks().forEach(t=>t.stop())}
@@ -239,8 +289,7 @@ async function openCam(){
     $("camBox").classList.add("on");
   }catch(e){
     stopCam();
-    $("camErr").textContent="⚠️ Camera access was blocked or no camera was found. Click the lock icon next to the web address, allow Camera, then try again. You can also use Choose pictures.";
-    $("camErr").hidden=false;
+    camBad=true;setCamErr();
   }
 }
 $("snap").onclick=()=>{
@@ -267,6 +316,9 @@ $("clear").onclick=()=>{
   $("results").innerHTML="";counts.g=counts.a=counts.r=0;
   ["cg","ca","cr"].forEach(id=>$(id).textContent="0");$("stats").hidden=true;
 };
+$("lEn").onclick=()=>applyLang("en");
+$("lAr").onclick=()=>applyLang("ar");
+applyLang(lang);
 </script>
 </body>
 </html>
